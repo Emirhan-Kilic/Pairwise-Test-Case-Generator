@@ -47,6 +47,13 @@ def main():
     st.title("Pairwise Test Case Generator")
     initialize_session_state()
     
+    if 'clear_fields' in st.session_state and st.session_state.clear_fields:
+        # Reset the clear_fields flag
+        st.session_state.clear_fields = False
+        # Initialize empty input fields
+        st.session_state.new_param = ""
+        st.session_state.new_values = ""
+
     st.markdown("""
     ### Instructions
     1. Add, edit, or delete parameters and their values using the controls below
@@ -56,28 +63,34 @@ def main():
     # Parameter management section
     st.subheader("Parameter Management")
     
-    # Add new parameter section with better spacing
+    # Add Clear All button and new parameter controls in the same row
     with st.container():
-        col1, col2, col3 = st.columns([1, 2, 1])
+        col1, col2, col3, col4 = st.columns([1, 2, 0.7, 0.3])
         with col1:
-            new_param = st.text_input("New Parameter Name")
+            new_param = st.text_input("New Parameter Name", key="new_param")
         with col2:
-            new_values = st.text_input("Values (comma-separated)")
+            new_values = st.text_input("Values (comma-separated)", key="new_values")
         with col3:
-            st.write("")  # Spacing
             if st.button("Add Parameter", use_container_width=True):
-                # Validate parameter name
                 name_valid, name_error = validate_parameter_name(new_param)
                 if not name_valid:
                     st.error(name_error)
                 else:
-                    # Validate parameter values
                     values_valid, values_list, values_error = validate_parameter_values(new_values)
                     if not values_valid:
                         st.error(values_error)
                     else:
                         st.session_state.parameters[new_param.strip()] = values_list
                         st.success(f"Added parameter: {new_param}")
+                        # Use form_submit_button to trigger a rerun with empty fields
+                        st.session_state.clear_fields = True
+                        st.rerun()
+        with col4:
+            if st.button("Clear All", type="secondary", use_container_width=True):
+                st.session_state.parameters = {}
+                st.session_state.clear_fields = True
+                st.success("All parameters cleared")
+                st.rerun()
 
     # Edit existing parameters
     st.subheader("Current Parameters")
@@ -114,13 +127,12 @@ def main():
             
             with col4:
                 if st.button("🗑️ Delete", key=f"delete_{param}", use_container_width=True):
-                    # Prevent deletion if it would leave less than 2 parameters
-                    if len(st.session_state.parameters) <= 2:
-                        st.error("Cannot delete: minimum 2 parameters required")
+                    del st.session_state.parameters[param]
+                    if len(st.session_state.parameters) == 1:
+                        st.warning("Only 1 parameter remaining. Add more parameters to generate test cases.")
                     else:
-                        del st.session_state.parameters[param]
                         st.success(f"Deleted {param}")
-                        st.rerun()
+                    st.rerun()
 
     # Generate test cases section
     st.markdown("---")
