@@ -25,7 +25,7 @@ def validate_parameter_name(name):
         return False, "Parameter name already exists"
     return True, ""
 
-def validate_parameter_values(values):
+def validate_parameter_values(values, current_param=None):
     """Validate and clean parameter values"""
     if not values or not values.strip():
         return False, [], "Values cannot be empty"
@@ -37,9 +37,19 @@ def validate_parameter_values(values):
     if not values_list:
         return False, [], "No valid values provided"
     
-    # Check for duplicates
+    # Check for duplicates within this parameter
     if len(values_list) != len(set(values_list)):
-        return False, [], "Duplicate values are not allowed"
+        return False, [], "Duplicate values are not allowed within a parameter"
+    
+    # Check for duplicates across all parameters
+    all_other_values = set()
+    for param, param_values in st.session_state.parameters.items():
+        if param != current_param:  # Skip the current parameter when updating
+            all_other_values.update(param_values)
+    
+    duplicates = set(values_list) & all_other_values
+    if duplicates:
+        return False, [], f"Values {', '.join(duplicates)} already exist in other parameters"
     
     # Check minimum number of values
     if len(values_list) < 2:
@@ -99,18 +109,17 @@ def main():
         with col3:
             if st.button("Add Parameter", use_container_width=True):
                 name_valid, name_error = validate_parameter_name(new_param)
-                if not name_valid:
-                    st.error(name_error)
-                else:
+                if name_valid:
                     values_valid, values_list, values_error = validate_parameter_values(new_values)
-                    if not values_valid:
-                        st.error(values_error)
-                    else:
+                    if values_valid:
                         st.session_state.parameters[new_param.strip()] = values_list
-                        st.success(f"Added parameter: {new_param}")
-                        # Use form_submit_button to trigger a rerun with empty fields
+                        st.success(f"Added {new_param}")
                         st.session_state.clear_fields = True
                         st.rerun()
+                    else:
+                        st.error(values_error)
+                else:
+                    st.error(name_error)
         with col4:
             if st.button("Clear All", type="secondary", use_container_width=True):
                 st.session_state.parameters = {}
@@ -143,8 +152,7 @@ def main():
             
             with col3:
                 if st.button("📝 Update", key=f"update_{param}", use_container_width=True):
-                    # Validate updated values
-                    values_valid, values_list, values_error = validate_parameter_values(values)
+                    values_valid, values_list, values_error = validate_parameter_values(values, current_param=param)
                     if not values_valid:
                         st.error(values_error)
                     else:
