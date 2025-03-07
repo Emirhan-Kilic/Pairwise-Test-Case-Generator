@@ -1,5 +1,6 @@
 import streamlit as st
 import algo
+import greedyalgo
 from ast import literal_eval
 
 def initialize_session_state():
@@ -11,6 +12,10 @@ def initialize_session_state():
             'Color': ['Monochrome', 'Colormap', '16-bit', 'True Color'],
             'Screen Size': ['Hand-held', 'laptop', 'fullsize']
         }
+
+def initialize_algorithm_state():
+    if 'algorithm' not in st.session_state:
+        st.session_state.algorithm = 'CP-SAT'
 
 def validate_parameter_name(name):
     """Validate parameter name"""
@@ -46,6 +51,7 @@ def main():
     st.set_page_config(layout="wide")
     st.title("Pairwise Test Case Generator")
     initialize_session_state()
+    initialize_algorithm_state()
     
     if 'clear_fields' in st.session_state and st.session_state.clear_fields:
         # Reset the clear_fields flag
@@ -59,6 +65,15 @@ def main():
     1. Add, edit, or delete parameters and their values using the controls below
     2. Click 'Generate Test Cases' to create an optimal test suite
     """)
+
+    # Add algorithm selection before the instructions
+    st.radio(
+        "Select Algorithm",
+        ['CP-SAT', 'Greedy'],
+        key='algorithm',
+        horizontal=True,
+        help="CP-SAT is more optimal but slower, Greedy is faster but may produce more test cases"
+    )
 
     # Parameter management section
     st.subheader("Parameter Management")
@@ -159,13 +174,20 @@ def main():
             return
             
         with st.spinner("Generating optimal test suite..."):
-            optimal_tests, all_pairs = algo.find_minimum_test_suite(st.session_state.parameters)
+            if st.session_state.algorithm == 'CP-SAT':
+                optimal_tests, all_pairs = algo.find_minimum_test_suite(st.session_state.parameters)
+                if optimal_tests:
+                    covered_pairs, test_case_pairs, new_unique_counts = algo.count_unique_pairs(
+                        optimal_tests, all_pairs, st.session_state.parameters
+                    )
+            else:  # Greedy algorithm
+                optimal_tests, all_pairs = greedyalgo.find_minimum_test_suite(st.session_state.parameters)
+                if optimal_tests:
+                    covered_pairs, test_case_pairs, new_unique_counts = greedyalgo.count_unique_pairs(
+                        optimal_tests, all_pairs, st.session_state.parameters
+                    )
 
             if optimal_tests:
-                covered_pairs, test_case_pairs, new_unique_counts = algo.count_unique_pairs(
-                    optimal_tests, all_pairs, st.session_state.parameters
-                )
-
                 # Display results
                 st.success("Test suite generated successfully!")
                 
