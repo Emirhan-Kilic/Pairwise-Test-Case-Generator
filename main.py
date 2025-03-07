@@ -66,15 +66,26 @@ def main():
     2. Click 'Generate Test Cases' to create an optimal test suite
     """)
 
-    # Add algorithm selection before the instructions
-    st.radio(
-        "Select Algorithm",
-        ['CP-SAT', 'Greedy'],
-        key='algorithm',
-        horizontal=True,
-        help="CP-SAT is more optimal but slower, Greedy is faster but may produce more test cases"
-    )
+    # Make algorithm selection more prominent
+    st.markdown("---")
+    st.subheader("Algorithm Selection")
+    
+    # Add explanation columns
+    col1, col2 = st.columns(2)
+    with col1:
+        st.radio(
+            "Select Algorithm",
+            ['CP-SAT', 'Greedy'],
+            key='algorithm',
+            horizontal=True,
+        )
+    with col2:
+        if st.session_state.algorithm == 'CP-SAT':
+            st.info("🎯 CP-SAT: Generates optimal (minimum) test cases but may be slower for large parameter sets")
+        else:
+            st.info("⚡ Greedy: Faster execution but may generate more test cases than necessary")
 
+    st.markdown("---")
     # Parameter management section
     st.subheader("Parameter Management")
     
