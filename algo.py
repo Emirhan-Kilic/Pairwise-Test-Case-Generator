@@ -1,5 +1,6 @@
 from itertools import combinations, product
 from ortools.sat.python import cp_model
+import streamlit as st
 
 def generate_pairwise_combinations(parameters):
     param_keys = sorted(parameters.keys())  # Sort keys lexicographically
@@ -14,6 +15,13 @@ def generate_pairwise_combinations(parameters):
     return list(all_pairs)
 
 def find_minimum_test_suite(parameters):
+    if not isinstance(parameters, dict):
+        raise TypeError("Parameters must be a dictionary")
+    if not parameters:
+        raise ValueError("Parameters dictionary cannot be empty")
+    if not all(isinstance(v, list) for v in parameters.values()):
+        raise TypeError("All parameter values must be lists")
+    
     all_pairs = generate_pairwise_combinations(parameters)
     param_keys = list(parameters.keys())
     all_values = list(product(*parameters.values()))
@@ -33,9 +41,14 @@ def find_minimum_test_suite(parameters):
     model.Minimize(sum(test_case_vars))
 
     solver = cp_model.CpSolver()
+    solver.parameters.max_time_in_seconds = 300  # Add timeout
     status = solver.Solve(model)
 
-    if status in (cp_model.OPTIMAL, cp_model.FEASIBLE):
+    if status == cp_model.OPTIMAL:
+        optimal_suite = [all_values[i] for i in range(len(all_values)) if solver.Value(test_case_vars[i])]
+        return optimal_suite, all_pairs
+    elif status == cp_model.FEASIBLE:
+        st.warning("Found a solution, but it may not be optimal")
         optimal_suite = [all_values[i] for i in range(len(all_values)) if solver.Value(test_case_vars[i])]
         return optimal_suite, all_pairs
     else:

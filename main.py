@@ -12,6 +12,10 @@ def initialize_session_state():
             'Color': ['Monochrome', 'Colormap', '16-bit', 'True Color'],
             'Screen Size': ['Hand-held', 'laptop', 'fullsize']
         }
+    
+    # Add version tracking
+    if 'version' not in st.session_state:
+        st.session_state.version = "1.0"
 
 def initialize_algorithm_state():
     if 'algorithm' not in st.session_state:
@@ -21,21 +25,39 @@ def validate_parameter_name(name):
     """Validate parameter name"""
     if not name or not name.strip():
         return False, "Parameter name cannot be empty"
+    
+    # Add character validation
+    if not all(c.isalnum() or c in [' ', '_', '-'] for c in name):
+        return False, "Parameter names can only contain letters, numbers, spaces, underscores, and hyphens"
+    
+    # Add length validation
+    if len(name) > 50:
+        return False, "Parameter name too long (max 50 characters)"
+    
     if name.strip() in st.session_state.parameters:
         return False, "Parameter name already exists"
+    
     return True, ""
 
 def validate_parameter_values(values, current_param=None):
     """Validate and clean parameter values"""
+    MAX_VALUE_LENGTH = 100
+    MAX_VALUES = 50
+    
     if not values or not values.strip():
         return False, [], "Values cannot be empty"
     
     # Split and clean values
     values_list = [v.strip() for v in values.split(',') if v.strip()]
     
-    # Check if we have any valid values after cleaning
-    if not values_list:
-        return False, [], "No valid values provided"
+    # Check maximum number of values
+    if len(values_list) > MAX_VALUES:
+        return False, [], f"Maximum {MAX_VALUES} values allowed per parameter"
+    
+    # Check value length
+    long_values = [v for v in values_list if len(v) > MAX_VALUE_LENGTH]
+    if long_values:
+        return False, [], f"Values exceeding {MAX_VALUE_LENGTH} characters: {', '.join(long_values)}"
     
     # Check for duplicates within this parameter
     if len(values_list) != len(set(values_list)):

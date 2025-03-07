@@ -20,8 +20,14 @@ def get_pairs_in_test(test: List[str], param_keys: List[str]) -> Set[Tuple[Tuple
     return pairs
 
 def find_minimum_test_suite(parameters: Dict[str, List[str]]) -> Tuple[List[List[str]], List[Tuple[Tuple[str, str], Tuple[str, str]]]]:
+    MAX_COMBINATIONS = 1000000  # Set reasonable limit
+    
     param_keys = list(parameters.keys())
     all_values = list(product(*parameters.values()))
+    
+    if len(all_values) > MAX_COMBINATIONS:
+        raise ValueError(f"Too many combinations: {len(all_values)}. Maximum allowed: {MAX_COMBINATIONS}")
+    
     all_pairs = generate_pairwise_combinations(parameters)
     
     covered_pairs: Set[Tuple[Tuple[str, str], Tuple[str, str]]] = set()
