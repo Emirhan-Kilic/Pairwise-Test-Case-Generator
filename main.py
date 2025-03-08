@@ -94,8 +94,11 @@ def main():
 
     st.markdown("""
     ### Instructions
-    1. Add, edit, or delete parameters and their values using the controls below
-    2. Click 'Generate Test Cases' to create an optimal test suite
+    1. The exmaples are given as default values for the parameters.
+    2. Choose algorithm from the selection box, CP-SAT will be the default and any performance and accruacy tests should be done with CP-SAT.
+    3. Add, edit, or delete parameters and their values using the controls below
+    4. Click 'Generate Test Cases' to create an optimal test suite
+    5. The results will be displayed in the table below
     """)
 
     # Make algorithm selection more prominent
