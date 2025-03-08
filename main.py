@@ -120,7 +120,7 @@ def main():
         if st.session_state.algorithm == 'CP-SAT':
             st.info("🎯 CP-SAT: Generates optimal (minimum) test cases but may be slower for large parameter sets")
         else:
-            st.info("⚡ Greedy: Faster execution but may generate more test cases than necessary")
+            st.info("⚡ Greedy: Faster execution but may generate more test cases than necessary, similar to in-class working example")
 
     st.markdown("---")
     # Parameter management section
