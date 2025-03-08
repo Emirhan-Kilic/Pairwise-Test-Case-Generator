@@ -82,6 +82,8 @@ def validate_parameter_values(values, current_param=None):
 def main():
     st.set_page_config(layout="wide")
     st.title("Pairwise Test Case Generator")
+    st.title("Emirhan Kılıç")
+
     initialize_session_state()
     initialize_algorithm_state()
     
